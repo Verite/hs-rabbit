@@ -7,16 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 import static com.hengdao.hs.rabbit.spring.boot.starter.exception.MqStatus.SEND_INVALID;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.impl.*;
+import org.springframework.context.annotation.Configuration;
 
 
 /**
@@ -26,7 +25,7 @@ import com.hengdao.hs.rabbit.spring.boot.starter.messages.impl.*;
  */
 @Slf4j
 @AllArgsConstructor
-@AutoConfiguration(after = RedisAutoConfiguration.class)
+@Configuration
 @EnableConfigurationProperties({RabbitProperties.class})
 @ConditionalOnClass(MessageBusService.class)
 public class RabbitMqAutoConfiguration {
@@ -64,8 +63,8 @@ public class RabbitMqAutoConfiguration {
                 log.info("消息发送成功:correlationData({}),ack(true),cause({})", correlationData, cause);
             }
         });
-        rabbitTemplate.setReturnsCallback((returned -> log.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}", returned.getExchange(), returned.getRoutingKey(), returned.getReplyCode(), returned.getReplyText(), returned.getMessage()
-        )));
+        // rabbitTemplate.setReturnsCallback((returned -> log.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}", returned.getExchange(), returned.getRoutingKey(), returned.getReplyCode(), returned.getReplyText(), returned.getMessage()
+        // )));
         return rabbitTemplate;
     }
 

@@ -27,19 +27,19 @@ import org.redisson.config.Config;
 import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.config.SentinelServersConfig;
 import org.redisson.config.SingleServerConfig;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * 分布式锁自动化配置
  *
  * @author L.cm
  */
-@AutoConfiguration
+@Configuration
 @ConditionalOnClass(RedissonClient.class)
 @EnableConfigurationProperties(RedisLockProperties.class)
 @ConditionalOnProperty(value = RedisLockProperties.LOCK_ENABLED, havingValue = "true")
