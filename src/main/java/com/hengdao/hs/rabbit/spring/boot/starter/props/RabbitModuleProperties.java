@@ -1,11 +1,12 @@
-package com.hengdao.hs.rabbit.spring.boot.starter.config;
+package com.hengdao.hs.rabbit.spring.boot.starter.props;
 
 import com.hengdao.hs.rabbit.spring.boot.starter.lock.LockType;
-import lombok.Getter;
-import lombok.Setter;
+import com.hengdao.hs.rabbit.spring.boot.starter.rabbitMq.RabbitModuleInfo;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,35 +15,29 @@ import java.util.concurrent.TimeUnit;
  * @date 2022.11.23
  * @apiNote
  */
-@Getter
-@Setter
-@Component
-@ConfigurationProperties(RabbitProperties.PREFIX)
-public class RabbitProperties {
+@Data
+@ConfigurationProperties(RabbitModuleProperties.PREFIX)
+public class RabbitModuleProperties {
+
+
     /**
      * 配置前置字段
      */
-    public static final String PREFIX = "spring.rabbit";
-    /**
-     * 是否开启redis存储字段名称。
-     */
-    public static final String REDIS_CACHE_ENABLED = PREFIX + ".redisCacheEnable";
-    /**
-     * 是否开启：默认为：false，便于生成配置提示。
-     */
-    private Boolean redisCacheEnabled = false;
+    public static final String PREFIX = "spring.rabbitmq";
+
     /**
      * 单机配置：rabbit 主机
      */
-    private String host = "localhost";
-    /**
+    private String host ;
+
+     /**
      * 单机配置：rabbit 端口
      */
-    private int port = 5672;
+    private int port ;
     /**
      * 用户名称
      */
-    private String username = "guest";
+    private String username;
     /**
      * 用户组
      */
@@ -75,4 +70,6 @@ public class RabbitProperties {
      * redis 锁标志
      */
     private LockType lockType = LockType.FAIR;
+
+    private List<RabbitModuleInfo> modules;
 }

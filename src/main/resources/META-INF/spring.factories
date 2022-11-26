@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.hengdao.hs.rabbit.spring.boot.starter.config.RedisLockAutoConfiguration,\
-com.hengdao.hs.rabbit.spring.boot.starter.config.RabbitMqAutoConfiguration

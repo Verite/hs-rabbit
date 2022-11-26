@@ -17,6 +17,7 @@
 
 package com.hengdao.hs.rabbit.spring.boot.starter.config;
 
+import com.hengdao.hs.rabbit.spring.boot.starter.props.RedisLockModuleProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.lock.RedisLockClient;
 import com.hengdao.hs.rabbit.spring.boot.starter.lock.RedisLockClientImpl;
 import jodd.util.StringUtil;
@@ -41,14 +42,14 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass(RedissonClient.class)
-@EnableConfigurationProperties(RedisLockProperties.class)
-@ConditionalOnProperty(value = RedisLockProperties.LOCK_ENABLED, havingValue = "true")
+@EnableConfigurationProperties(RedisLockModuleProperties.class)
+@ConditionalOnProperty(value = RedisLockModuleProperties.LOCK_ENABLED, havingValue = "true")
 public class RedisLockAutoConfiguration {
 
-    private static Config singleConfig(RedisLockProperties properties) {
+    private Config singleConfig(RedisLockModuleProperties properties) {
         Config config = new Config();
         SingleServerConfig serversConfig = config.useSingleServer();
-        serversConfig.setAddress(properties.getAddress());
+        serversConfig.setAddress(getAddress(properties));
         String password = properties.getPassword();
         if (StringUtil.isNotBlank(password)) {
             serversConfig.setPassword(password);
@@ -62,7 +63,7 @@ public class RedisLockAutoConfiguration {
         return config;
     }
 
-    private static Config masterSlaveConfig(RedisLockProperties properties) {
+    private Config masterSlaveConfig(RedisLockModuleProperties properties) {
         Config config = new Config();
         MasterSlaveServersConfig serversConfig = config.useMasterSlaveServers();
         serversConfig.setMasterAddress(properties.getMasterAddress());
@@ -82,7 +83,7 @@ public class RedisLockAutoConfiguration {
         return config;
     }
 
-    private static Config sentinelConfig(RedisLockProperties properties) {
+    private Config sentinelConfig(RedisLockModuleProperties properties) {
         Config config = new Config();
         SentinelServersConfig serversConfig = config.useSentinelServers();
         serversConfig.setMasterName(properties.getMasterName());
@@ -102,7 +103,7 @@ public class RedisLockAutoConfiguration {
         return config;
     }
 
-    private static Config clusterConfig(RedisLockProperties properties) {
+    private Config clusterConfig(RedisLockModuleProperties properties) {
         Config config = new Config();
         ClusterServersConfig serversConfig = config.useClusterServers();
         serversConfig.addNodeAddress(properties.getNodeAddress());
@@ -121,19 +122,17 @@ public class RedisLockAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(name = RabbitProperties.REDIS_CACHE_ENABLED, matchIfMissing = true)
-    public RedisLockClient redisLockClient(RedisLockProperties properties) {
+    @ConditionalOnMissingBean
+    public RedisLockClient redisLockClient(RedisLockModuleProperties properties) {
         return new RedisLockClientImpl(redissonClient(properties));
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public RedisLockClient noRedisLockClient() {
-        return new RedisLockClientImpl();
+    public String getAddress(RedisLockModuleProperties properties) {
+        return String.format("redis://%s:%s", properties.getHost(), properties.getPort());
     }
 
-    private static RedissonClient redissonClient(RedisLockProperties properties) {
-        RedisLockProperties.Mode mode = properties.getMode();
+    private RedissonClient redissonClient(RedisLockModuleProperties properties) {
+        RedisLockModuleProperties.Mode mode = properties.getMode();
         Config config;
         switch (mode) {
             case sentinel:

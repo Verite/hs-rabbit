@@ -15,7 +15,7 @@
  *  Author: DreamLu 卢春梦 (596392912@qq.com)
  */
 
-package com.hengdao.hs.rabbit.spring.boot.starter.config;
+package com.hengdao.hs.rabbit.spring.boot.starter.props;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,13 +29,12 @@ import org.springframework.stereotype.Component;
  */
 @Getter
 @Setter
-@Component
-@ConfigurationProperties(RedisLockProperties.PREFIX)
-public class RedisLockProperties {
+@ConfigurationProperties(RedisLockModuleProperties.PREFIX)
+public class RedisLockModuleProperties {
 	/**
 	 * 配置前置字段
 	 */
-	public static final String PREFIX = "histo.lock";
+	public static final String PREFIX = "spring.redis";
 	/**
 	 * 是否开启配置项名称。
 	 */
@@ -44,15 +43,19 @@ public class RedisLockProperties {
 	/**
 	 * 是否开启：默认为：false，便于生成配置提示。
 	 */
-	private Boolean enabled = Boolean.FALSE;
+	private Boolean enabled = Boolean.TRUE;
 	/**
 	 * 单机配置：redis 服务地址
 	 */
-	private String address = "redis://127.0.0.1:6379";
+	private String host = "127.0.0.1";
+	/**
+	 * 单机配置：redis 端口
+	 */
+	private Integer port = 6379;
 	/**
 	 * 密码配置
 	 */
-	private String password;
+	private String password = "123456";
 	/**
 	 * db
 	 */
@@ -111,4 +114,6 @@ public class RedisLockProperties {
 		sentinel,
 		cluster
 	}
+
+
 }

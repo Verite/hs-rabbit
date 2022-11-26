@@ -13,8 +13,13 @@ public interface RabbitConstant {
 	String TOPIC_MODE_QUEUE = "topic.mode";
 
 	/**
-	 * 客户的route_key
+	 * 队列
 	 */
 	String CUSTOMER_ROUTING_KEY_NAME = "customer.routing.name";
+	/**
+	 * router
+	 */
+
+	String CUSTOMER_ROUTING_KEY_NAME_KEY = "customer.routing.name.key";
 
 }

@@ -1,9 +1,9 @@
 package com.hengdao.hs.rabbit.spring.boot.starter.messages.impl;
 
+import com.hengdao.hs.rabbit.spring.boot.starter.props.RabbitModuleProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.MqResult;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.MqStatus;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.ServiceException;
-import com.hengdao.hs.rabbit.spring.boot.starter.config.RabbitProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.LocalCacheMqService;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.dto.MessageStruct;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.RabbitConstant;
@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 /**
@@ -31,10 +32,11 @@ public class LocalCacheMqServiceImpl implements LocalCacheMqService {
     /**
      * rabbit 配置项
      */
-    private final  RabbitProperties rabbitProperties;
+    private final RabbitModuleProperties rabbitModuleProperties;
+    @Autowired
     private   RabbitTemplate rabbitTemplate;
-    public LocalCacheMqServiceImpl(RabbitProperties rabbitProperties){
-        this.rabbitProperties = rabbitProperties;
+    public LocalCacheMqServiceImpl(RabbitModuleProperties rabbitModuleProperties){
+        this.rabbitModuleProperties = rabbitModuleProperties;
     }
     /**
      * 检测消息体
@@ -63,7 +65,8 @@ public class LocalCacheMqServiceImpl implements LocalCacheMqService {
      */
     @Override
     public String getLockName(MessageStruct messageStruct) {
-        return rabbitProperties.getAppid() + messageStruct.getId();
+        //return rabbitModuleProperties.getAppid() + messageStruct.getId();
+        return null;
     }
 
     /**
@@ -95,7 +98,7 @@ public class LocalCacheMqServiceImpl implements LocalCacheMqService {
         String lockName = getLockName(messageStruct);
         locked(lockName);
         try {
-            rabbitTemplate.convertAndSend(RabbitConstant.TOPIC_MODE_QUEUE, RabbitConstant.CUSTOMER_ROUTING_KEY_NAME, messageStruct.getMessage(), new CorrelationData(lockName));
+            rabbitTemplate.convertAndSend(RabbitConstant.TOPIC_MODE_QUEUE, RabbitConstant.CUSTOMER_ROUTING_KEY_NAME_KEY, messageStruct.getMessage(), new CorrelationData(lockName));
         } catch (Exception var5) {
             var5.printStackTrace();
             logger.error("lockName:{};message: 发送失败 {};",lockName, var5.getMessage());

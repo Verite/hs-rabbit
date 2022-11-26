@@ -1,10 +1,10 @@
 package com.hengdao.hs.rabbit.spring.boot.starter.messages.impl;
 
+import com.hengdao.hs.rabbit.spring.boot.starter.props.RabbitModuleProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.MqResult;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.MqStatus;
 import com.hengdao.hs.rabbit.spring.boot.starter.lock.LockType;
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.ServiceException;
-import com.hengdao.hs.rabbit.spring.boot.starter.config.RabbitProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.lock.RedisLockClient;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.dto.MessageStruct;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.RabbitConstant;
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 /**
@@ -25,14 +26,14 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class RedisCacheMqServiceImpl implements RedisCacheMqService {
     private static final Logger logger = LoggerFactory.getLogger(RedisCacheMqServiceImpl.class);
-    private final RabbitProperties rabbitProperties;
+    private final RabbitModuleProperties rabbitModuleProperties;
+    @Autowired
     private  RabbitTemplate rabbitTemplate;
+    @Autowired
     private RedisLockClient redisLockClient;
 
-    public RedisCacheMqServiceImpl(RabbitProperties rabbitProperties, RabbitTemplate rabbitTemplate, RedisLockClient redisLockClient) {
-        this.rabbitProperties = rabbitProperties;
-        this.rabbitTemplate = rabbitTemplate;
-        this.redisLockClient = redisLockClient;
+    public RedisCacheMqServiceImpl(RabbitModuleProperties rabbitModuleProperties) {
+        this.rabbitModuleProperties = rabbitModuleProperties;
     }
     /**
      * 检测消息体
@@ -57,7 +58,8 @@ public class RedisCacheMqServiceImpl implements RedisCacheMqService {
      */
     @Override
     public String getLockName(MessageStruct messageStruct) {
-        return this.rabbitProperties.getAppid() + messageStruct.getId() + this.rabbitProperties.getSecret();
+       // return this.rabbitModuleProperties.getAppid() + messageStruct.getId() + this.rabbitModuleProperties.getSecret();
+        return null;
     }
 
     /**
@@ -72,11 +74,11 @@ public class RedisCacheMqServiceImpl implements RedisCacheMqService {
             throw new ServiceException("redis 链接失效", MqStatus.VERIFY_CONNECT);
         }
         try {
-            redisLockClient.tryLock(lockName,
-                    this.rabbitProperties.getLockType(),
-                    this.rabbitProperties.getWaitOut(),
-                    this.rabbitProperties.getLeaseTime(),
-                    this.rabbitProperties.getTimeUnit());
+            // redisLockClient.tryLock(lockName,
+            //         this.rabbitModuleProperties.getLockType(),
+            //         this.rabbitModuleProperties.getWaitOut(),
+            //         this.rabbitModuleProperties.getLeaseTime(),
+            //         this.rabbitModuleProperties.getTimeUnit());
 
             logger.info("lockName:{};锁定：{}", lockName, "成功");
         } catch (Throwable var14) {
@@ -99,7 +101,7 @@ public class RedisCacheMqServiceImpl implements RedisCacheMqService {
         String lockName = getLockName(messageStruct);
         locked(lockName);
         try {
-            rabbitTemplate.convertAndSend(RabbitConstant.TOPIC_MODE_QUEUE, RabbitConstant.CUSTOMER_ROUTING_KEY_NAME, messageStruct.getMessage(), new CorrelationData(lockName));
+            rabbitTemplate.convertAndSend(RabbitConstant.TOPIC_MODE_QUEUE, RabbitConstant.CUSTOMER_ROUTING_KEY_NAME_KEY, messageStruct.getMessage(), new CorrelationData(lockName));
             logger.info("lockName:{};message:{};", lockName, messageStruct.getMessage() + "发送成功");
         } catch (AmqpException var5) {
             var5.printStackTrace();

@@ -1,12 +1,25 @@
 package com.hengdao.hs.rabbit.spring.boot.starter.config;
 
 import com.hengdao.hs.rabbit.spring.boot.starter.exception.ServiceException;
-import com.hengdao.hs.rabbit.spring.boot.starter.lock.RedisLockClient;
+import com.hengdao.hs.rabbit.spring.boot.starter.messages.RabbitConstant;
+import com.hengdao.hs.rabbit.spring.boot.starter.props.RabbitModuleProperties;
+import com.hengdao.hs.rabbit.spring.boot.starter.props.RedisLockModuleProperties;
 import com.hengdao.hs.rabbit.spring.boot.starter.messages.MessageBusService;
+import com.hengdao.hs.rabbit.spring.boot.starter.messages.impl.LocalCacheMqServiceImpl;
+import com.hengdao.hs.rabbit.spring.boot.starter.messages.impl.RedisCacheMqServiceImpl;
+import com.hengdao.hs.rabbit.spring.boot.starter.rabbitMq.RabbitModuleInitializer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,8 +27,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 import static com.hengdao.hs.rabbit.spring.boot.starter.exception.MqStatus.SEND_INVALID;
-import com.hengdao.hs.rabbit.spring.boot.starter.messages.impl.*;
-import org.springframework.context.annotation.Configuration;
 
 
 /**
@@ -25,31 +36,28 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @AllArgsConstructor
-@Configuration
-@EnableConfigurationProperties({RabbitProperties.class})
+@AutoConfigureAfter(RedisLockAutoConfiguration.class)
+@EnableConfigurationProperties({RabbitModuleProperties.class, RedisLockModuleProperties.class})
 @ConditionalOnClass(MessageBusService.class)
 public class RabbitMqAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(name = RabbitProperties.REDIS_CACHE_ENABLED, matchIfMissing = true)
-    public MessageBusService redisRabbitMqService(RabbitProperties rabbitProperties) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate();
-        RedisLockClient redisLockClient = null;
-        return new RedisCacheMqServiceImpl(rabbitProperties, rabbitTemplate, redisLockClient);
+    @ConditionalOnProperty(name = RedisLockModuleProperties.LOCK_ENABLED, havingValue = "true")
+    public MessageBusService redisRabbitMqService(RabbitModuleProperties rabbitModuleProperties) {
+        return new RedisCacheMqServiceImpl(rabbitModuleProperties);
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "rabbitTemplate")
-    public RabbitTemplate rabbitTemplate(RabbitProperties rabbitProperties) {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setPublisherConfirms(true);
-        connectionFactory.setPublisherReturns(true);
-        connectionFactory.setUsername(rabbitProperties.getUsername());
-        connectionFactory.setPassword(rabbitProperties.getPassword());
-        connectionFactory.setPort(rabbitProperties.getPort());
-        connectionFactory.setHost(rabbitProperties.getHost());
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+    @ConditionalOnMissingBean
+    public MessageBusService localRabbitMqService(RabbitModuleProperties rabbitModuleProperties) {
+        return new LocalCacheMqServiceImpl(rabbitModuleProperties);
+    }
 
+    @Bean
+    @ConditionalOnMissingBean
+    public RabbitTemplate rabbitTemplate(RabbitModuleProperties rabbitModuleProperties) {
+        CachingConnectionFactory connectionFactory = connectionFactory(rabbitModuleProperties);
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMandatory(true);
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
             /*
@@ -68,9 +76,52 @@ public class RabbitMqAutoConfiguration {
         return rabbitTemplate;
     }
 
+    private CachingConnectionFactory connectionFactory(RabbitModuleProperties rabbitModuleProperties) {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setPublisherConfirms(true);
+        connectionFactory.setPublisherReturns(true);
+        // connectionFactory.setUsername(rabbitModuleProperties.getUsername());
+        // connectionFactory.setPassword(rabbitModuleProperties.getPassword());
+        // connectionFactory.setPort(rabbitModuleProperties.getPort());
+        // connectionFactory.setHost(rabbitModuleProperties.getHost());
+        return connectionFactory;
+    }
+
+    //声明队列
+    @Bean
+    public Queue customerRoutingKeyName(){
+        Queue queue = new Queue(RabbitConstant.CUSTOMER_ROUTING_KEY_NAME);
+        //设置队列属性
+        return queue;
+    }
+
+    //声明订阅模式交换机
+    @Bean
+    public TopicExchange topicModeQueue(){
+        return new TopicExchange(RabbitConstant.TOPIC_MODE_QUEUE);
+    }
+
+    //绑定队列
+    @Bean
+    public Binding bindingCustomerRoutingKeyName(Queue customerRoutingKeyName, TopicExchange topicModeQueue){
+        return BindingBuilder.bind(customerRoutingKeyName).to(topicModeQueue).with(RabbitConstant.CUSTOMER_ROUTING_KEY_NAME_KEY);
+    }
+
+    /**
+     * 使用json序列化机制，进行消息转换
+     */
+    @Bean
+    public MessageConverter jackson2MessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    /**
+     * 动态创建队列、交换机初始化器
+     */
     @Bean
     @ConditionalOnMissingBean
-    public MessageBusService localRabbitMqService(RabbitProperties rabbitProperties) {
-        return new LocalCacheMqServiceImpl(rabbitProperties);
+    public RabbitModuleInitializer rabbitModuleInitializer(AmqpAdmin amqpAdmin, RabbitModuleProperties rabbitModuleProperties) {
+        return new RabbitModuleInitializer(amqpAdmin, rabbitModuleProperties);
     }
+
 }
