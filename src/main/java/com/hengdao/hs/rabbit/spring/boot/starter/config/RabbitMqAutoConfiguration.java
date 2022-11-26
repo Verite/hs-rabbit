@@ -80,10 +80,10 @@ public class RabbitMqAutoConfiguration {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
         connectionFactory.setPublisherConfirms(true);
         connectionFactory.setPublisherReturns(true);
-        // connectionFactory.setUsername(rabbitModuleProperties.getUsername());
-        // connectionFactory.setPassword(rabbitModuleProperties.getPassword());
-        // connectionFactory.setPort(rabbitModuleProperties.getPort());
-        // connectionFactory.setHost(rabbitModuleProperties.getHost());
+        connectionFactory.setUsername(rabbitModuleProperties.getUsername());
+        connectionFactory.setPassword(rabbitModuleProperties.getPassword());
+        connectionFactory.setPort(rabbitModuleProperties.getPort());
+        connectionFactory.setHost(rabbitModuleProperties.getHost());
         return connectionFactory;
     }
 

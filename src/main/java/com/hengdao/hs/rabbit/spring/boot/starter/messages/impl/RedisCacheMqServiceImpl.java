@@ -58,8 +58,8 @@ public class RedisCacheMqServiceImpl implements RedisCacheMqService {
      */
     @Override
     public String getLockName(MessageStruct messageStruct) {
-       // return this.rabbitModuleProperties.getAppid() + messageStruct.getId() + this.rabbitModuleProperties.getSecret();
-        return null;
+       return this.rabbitModuleProperties.getAppid() + messageStruct.getId() + this.rabbitModuleProperties.getSecret();
+        // return null;
     }
 
     /**
@@ -74,11 +74,11 @@ public class RedisCacheMqServiceImpl implements RedisCacheMqService {
             throw new ServiceException("redis 链接失效", MqStatus.VERIFY_CONNECT);
         }
         try {
-            // redisLockClient.tryLock(lockName,
-            //         this.rabbitModuleProperties.getLockType(),
-            //         this.rabbitModuleProperties.getWaitOut(),
-            //         this.rabbitModuleProperties.getLeaseTime(),
-            //         this.rabbitModuleProperties.getTimeUnit());
+            redisLockClient.tryLock(lockName,
+                    this.rabbitModuleProperties.getLockType(),
+                    this.rabbitModuleProperties.getWaitOut(),
+                    this.rabbitModuleProperties.getLeaseTime(),
+                    this.rabbitModuleProperties.getTimeUnit());
 
             logger.info("lockName:{};锁定：{}", lockName, "成功");
         } catch (Throwable var14) {

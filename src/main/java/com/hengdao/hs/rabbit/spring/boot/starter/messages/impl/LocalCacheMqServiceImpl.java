@@ -65,8 +65,8 @@ public class LocalCacheMqServiceImpl implements LocalCacheMqService {
      */
     @Override
     public String getLockName(MessageStruct messageStruct) {
-        //return rabbitModuleProperties.getAppid() + messageStruct.getId();
-        return null;
+        return rabbitModuleProperties.getAppid() + messageStruct.getId();
+        // return null;
     }
 
     /**
