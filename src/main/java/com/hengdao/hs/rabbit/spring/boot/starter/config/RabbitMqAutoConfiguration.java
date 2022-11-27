@@ -90,7 +90,7 @@ public class RabbitMqAutoConfiguration {
     //声明队列
     @Bean
     public Queue customerRoutingKeyName(){
-        Queue queue = new Queue(RabbitConstant.CUSTOMER_ROUTING_KEY_NAME);
+        Queue queue = new Queue(RabbitConstant.CUSTOMER_ROUTING_KEY_NAME,true);
         //设置队列属性
         return queue;
     }
@@ -98,7 +98,7 @@ public class RabbitMqAutoConfiguration {
     //声明订阅模式交换机
     @Bean
     public TopicExchange topicModeQueue(){
-        return new TopicExchange(RabbitConstant.TOPIC_MODE_QUEUE);
+        return new TopicExchange(RabbitConstant.TOPIC_MODE_QUEUE,true,false);
     }
 
     //绑定队列
