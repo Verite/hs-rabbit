@@ -28,7 +28,19 @@ import java.util.Map;
 public class RabbitModuleInitializer implements SmartInitializingSingleton {
 
     private AmqpAdmin amqpAdmin;
-
+    //设置交换机 队列
+    // modules:
+    //         # 延时队列，到了过期的时间会被转发到死信队列
+    //   -     routing-key: log.operation.queue.key
+    //         queue:
+    //         name: log.operation.queue
+    //               #          dead-letter-exchange: order.exchange
+    //               #          dead-letter-routing-key: order.close.routing.key
+    //         arguments:
+    //                 # 1分钟(测试)，单位毫秒
+    //         x-message-ttl: 60000
+    //         exchange:
+    //         name: log.exchange
     private RabbitModuleProperties rabbitModuleProperties;
 
     public RabbitModuleInitializer(AmqpAdmin amqpAdmin, RabbitModuleProperties rabbitModuleProperties) {
@@ -46,7 +58,7 @@ public class RabbitModuleInitializer implements SmartInitializingSingleton {
      * RabbitMQ 根据配置动态创建和绑定队列、交换机
      */
     private void declareRabbitModule() {
-        List<RabbitModuleInfo> rabbitModuleInfos = null;//rabbitModuleProperties.getModules();
+        List<RabbitModuleInfo> rabbitModuleInfos = rabbitModuleProperties.getModules();
         if (CollectionUtils.isEmpty(rabbitModuleInfos)) {
             return;
         }
